@@ -52,6 +52,7 @@ dependencies {
 
     // kestra
     compileOnly group: "io.kestra", name: "core", version: kestraVersion
+    implementation group: "io.kestra.plugin", name: "plugin-script", version: kestraVersion
 
     // libs included in the final jar
     api group: 'com.google.code.gson', name: 'gson', version: '2.10.1'
@@ -110,8 +111,8 @@ jar {
     manifest {
         attributes(
                 "X-Kestra-Name": project.name,
-                "X-Kestra-Title": "Template",
-                "X-Kestra-Group": project.group + ".templates",
+                "X-Kestra-Title": "SQLMesh",
+                "X-Kestra-Group": project.group + ".sqlmesh",
                 "X-Kestra-Description": project.description,
                 "X-Kestra-Version": project.version
         )
