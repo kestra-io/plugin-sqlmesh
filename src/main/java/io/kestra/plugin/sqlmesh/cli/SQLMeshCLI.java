@@ -37,7 +37,7 @@ import static io.kestra.core.utils.Rethrow.throwFunction;
 @Plugin(
     examples = {
         @Example(
-            title = "Initialize duckdb in sqlmesh",
+            title = "Orchestrate a SQLMesh project by automatically applying the plan",
             full = true,
             code = {
                 """
@@ -46,9 +46,10 @@ import static io.kestra.core.utils.Rethrow.throwFunction;
                 tasks:
                   - id: sqlmesh
                     type: io.kestra.plugin.sqlmesh.cli.SQLMeshCLI
-                    commands:
+                    beforeCommands:
                       - sqlmesh init duckdb
-                """
+                    commands:
+                      - sqlmesh plan --auto-apply"""
             }
         )
     }
@@ -57,13 +58,13 @@ public class SQLMeshCLI extends Task implements RunnableTask<ScriptOutput> {
     private static final String DEFAULT_IMAGE = "ghcr.io/kestra-io/sqlmesh";
 
     @Schema(
-        title = "The commands to execute before the main list of commands"
+        title = "The commands to execute before the main list of commands, e.g. to initialize or prepare the environment"
     )
     @PluginProperty(dynamic = true)
     protected List<String> beforeCommands;
 
     @Schema(
-        title = "The commands to run"
+        title = "The commands to run in the container."
     )
     @PluginProperty(dynamic = true)
     @NotNull
@@ -80,7 +81,7 @@ public class SQLMeshCLI extends Task implements RunnableTask<ScriptOutput> {
     protected Map<String, String> env;
 
     @Schema(
-        title = "Docker options when for using `DOCKER` runner",
+        title = "Docker options when using the `DOCKER` runner",
         defaultValue = "{image=" + DEFAULT_IMAGE + ", pullPolicy=ALWAYS}"
     )
     @PluginProperty
@@ -90,7 +91,7 @@ public class SQLMeshCLI extends Task implements RunnableTask<ScriptOutput> {
     @Override
     public ScriptOutput run(RunContext runContext) throws Exception {
         return new CommandsWrapper(runContext)
-            .withWarningOnStdErr(true)
+            .withWarningOnStdErr(false)
             .withRunnerType(RunnerType.DOCKER)
             .withDockerOptions(injectDefaults(getDocker()))
             .withEnv(Optional.ofNullable(env).orElse(new HashMap<>()))
