@@ -32,12 +32,13 @@ import static io.kestra.core.utils.Rethrow.throwFunction;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute sqlmesh command"
+    title = "Orchestrate a SQLMesh project from the Command Line Interface"
 )
 @Plugin(
     examples = {
         @Example(
             title = "Initialize duckdb in sqlmesh",
+            full = true,
             code = {
                 """
                 id: transform
@@ -56,7 +57,7 @@ public class SQLMeshCLI extends Task implements RunnableTask<ScriptOutput> {
     private static final String DEFAULT_IMAGE = "ghcr.io/kestra-io/sqlmesh";
 
     @Schema(
-        title = "The commands to run before main list of commands"
+        title = "The commands to execute before the main list of commands"
     )
     @PluginProperty(dynamic = true)
     protected List<String> beforeCommands;
@@ -79,7 +80,7 @@ public class SQLMeshCLI extends Task implements RunnableTask<ScriptOutput> {
     protected Map<String, String> env;
 
     @Schema(
-        title = "Docker options when for the `DOCKER` runner",
+        title = "Docker options when for using `DOCKER` runner",
         defaultValue = "{image=" + DEFAULT_IMAGE + ", pullPolicy=ALWAYS}"
     )
     @PluginProperty
