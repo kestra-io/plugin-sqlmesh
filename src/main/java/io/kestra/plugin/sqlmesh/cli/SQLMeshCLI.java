@@ -2,8 +2,7 @@ package io.kestra.plugin.sqlmesh.cli;
 
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
-import io.kestra.core.models.tasks.NamespaceFiles;
-import io.kestra.core.models.tasks.NamespaceFilesInterface;
+import io.kestra.core.models.tasks.*;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.RunnerType;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
@@ -14,8 +13,6 @@ import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.apache.commons.lang3.StringUtils;
 import io.kestra.core.models.annotations.PluginProperty;
-import io.kestra.core.models.tasks.RunnableTask;
-import io.kestra.core.models.tasks.Task;
 import io.kestra.core.runners.RunContext;
 import org.slf4j.Logger;
 
@@ -56,7 +53,7 @@ import static io.kestra.core.utils.Rethrow.throwFunction;
         )
     }
 )
-public class SQLMeshCLI extends Task implements RunnableTask<ScriptOutput>, NamespaceFilesInterface {
+public class SQLMeshCLI extends Task implements RunnableTask<ScriptOutput>, NamespaceFilesInterface, InputFilesInterface, OutputFilesInterface {
     private static final String DEFAULT_IMAGE = "ghcr.io/kestra-io/sqlmesh";
 
     @Schema(
@@ -92,6 +89,10 @@ public class SQLMeshCLI extends Task implements RunnableTask<ScriptOutput>, Name
 
     private NamespaceFiles namespaceFiles;
 
+    private Object inputFiles;
+
+    private List<String> outputFiles;
+
     @Override
     public ScriptOutput run(RunContext runContext) throws Exception {
         return new CommandsWrapper(runContext)
@@ -100,13 +101,15 @@ public class SQLMeshCLI extends Task implements RunnableTask<ScriptOutput>, Name
             .withDockerOptions(injectDefaults(getDocker()))
             .withEnv(Optional.ofNullable(env).orElse(new HashMap<>()))
             .withNamespaceFiles(namespaceFiles)
+            .withInputFiles(inputFiles)
+            .withOutputFiles(outputFiles)
             .withCommands(
                 ScriptService.scriptCommands(
                     List.of("/bin/sh", "-c"),
                     Optional.ofNullable(this.beforeCommands).map(throwFunction(runContext::render)).orElse(null),
                     runContext.render(this.commands)
-                                            )
-                         )
+                )
+            )
             .run();
     }
 
