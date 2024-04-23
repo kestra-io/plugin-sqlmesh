@@ -21,8 +21,8 @@ repositories {
     }
 }
 
-sourceCompatibility = 17
-targetCompatibility = 17
+sourceCompatibility = 21
+targetCompatibility = 21
 
 group "io.kestra.plugin"
 description 'Plugin template for Kestra'
@@ -33,22 +33,17 @@ tasks.withType(JavaCompile) {
 }
 
 dependencies {
-    // lombok
+    // Lombok
     annotationProcessor "org.projectlombok:lombok:$lombokVersion"
     compileOnly "org.projectlombok:lombok:$lombokVersion"
 
-    // micronaut
-    annotationProcessor platform("io.micronaut.platform:micronaut-platform:$micronautVersion")
-    annotationProcessor "io.micronaut:micronaut-inject-java"
-    annotationProcessor "io.micronaut.validation:micronaut-validation-processor"
-
-    compileOnly platform("io.micronaut.platform:micronaut-platform:$micronautVersion")
-    compileOnly "io.micronaut:micronaut-inject"
-    compileOnly "io.micronaut.validation:micronaut-validation"
-
-    // kestra
+    // Kestra
+    annotationProcessor group: "io.kestra", name: "processor", version: kestraVersion
     compileOnly group: "io.kestra", name: "core", version: kestraVersion
     implementation group: "io.kestra.plugin", name: "plugin-script", version: kestraVersion
+
+    // Logs
+    compileOnly'org.slf4j:slf4j-api:2.0.13'
 }
 
 
@@ -82,6 +77,7 @@ dependencies {
     testImplementation "io.micronaut.test:micronaut-test-junit5"
 
     // test deps needed only for to have a runner
+    testAnnotationProcessor group: "io.kestra", name: "processor", version: kestraVersion
     testImplementation group: "io.kestra", name: "core", version: kestraVersion
     testImplementation group: "io.kestra", name: "repository-memory", version: kestraVersion
     testImplementation group: "io.kestra", name: "runner-memory", version: kestraVersion
