@@ -6,7 +6,7 @@ import io.kestra.core.utils.TestsUtils;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 import io.kestra.plugin.sqlmesh.cli.SQLMeshCLI;
-import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
+import io.kestra.core.junit.annotations.KestraTest;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Test;
 import io.kestra.core.runners.RunContext;
@@ -21,7 +21,7 @@ import java.util.Map;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
-@MicronautTest
+@KestraTest
 class SQLMeshCLITest {
 
     @Inject
