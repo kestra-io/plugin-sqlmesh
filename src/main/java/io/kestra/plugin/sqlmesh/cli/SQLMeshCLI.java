@@ -39,7 +39,7 @@ import static io.kestra.core.utils.Rethrow.throwFunction;
             code = {
                 """
                 id: transform
-                namespace: dev
+                namespace: company.team
                 tasks:
                   - id: sqlmesh
                     type: io.kestra.plugin.sqlmesh.cli.SQLMeshCLI
