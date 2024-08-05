@@ -94,7 +94,7 @@ public class SQLMeshCLI extends Task implements RunnableTask<ScriptOutput>, Name
     @PluginProperty
     @Builder.Default
     @Valid
-    private TaskRunner taskRunner = Docker.INSTANCE;
+    private TaskRunner taskRunner = Docker.instance();
 
     @Schema(title = "The task runner container image, only used if the task runner is container-based.")
     @PluginProperty(dynamic = true)
