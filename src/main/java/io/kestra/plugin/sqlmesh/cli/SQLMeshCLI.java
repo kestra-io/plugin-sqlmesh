@@ -41,10 +41,11 @@ import static io.kestra.core.utils.Rethrow.throwFunction;
             full = true,
             code = {
                 """
-                id: transform
+                id: sqlmesh_transform
                 namespace: company.team
+
                 tasks:
-                  - id: sqlmesh
+                  - id: transform
                     type: io.kestra.plugin.sqlmesh.cli.SQLMeshCLI
                     beforeCommands:
                       - sqlmesh init duckdb
