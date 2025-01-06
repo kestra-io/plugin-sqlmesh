@@ -7,7 +7,6 @@ import io.kestra.core.models.tasks.*;
 import io.kestra.core.models.tasks.runners.ScriptService;
 import io.kestra.core.models.tasks.runners.TaskRunner;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
-import io.kestra.plugin.scripts.exec.scripts.models.RunnerType;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 import io.kestra.plugin.scripts.exec.scripts.runners.CommandsWrapper;
 import io.kestra.plugin.scripts.runner.docker.Docker;
@@ -96,7 +95,7 @@ public class SQLMeshCLI extends Task implements RunnableTask<ScriptOutput>, Name
     @PluginProperty
     @Builder.Default
     @Valid
-    private TaskRunner taskRunner = Docker.instance();
+    private TaskRunner<?> taskRunner = Docker.instance();
 
     @Schema(title = "The task runner container image, only used if the task runner is container-based.")
     @PluginProperty(dynamic = true)
