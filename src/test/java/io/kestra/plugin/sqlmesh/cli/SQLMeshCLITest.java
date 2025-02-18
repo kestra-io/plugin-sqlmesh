@@ -1,6 +1,8 @@
 package io.kestra.plugin.sqlmesh.cli;
 
 import com.google.common.collect.ImmutableMap;
+import io.kestra.core.models.property.Property;
+import io.kestra.core.serializers.JacksonMapper;
 import io.kestra.core.utils.IdUtils;
 import io.kestra.core.utils.TestsUtils;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
@@ -37,7 +39,7 @@ class SQLMeshCLITest {
             .id(IdUtils.create())
             .type(SQLMeshCLI.class.getName())
             .docker(DockerOptions.builder().image("ghcr.io/kestra-io/sqlmesh").entryPoint(Collections.emptyList()).build())
-            .commands(List.of("sqlmesh --version"));
+            .commands(Property.of(List.of("sqlmesh --version")));
 
         SQLMeshCLI runner = terraformBuilder.build();
 
@@ -48,13 +50,13 @@ class SQLMeshCLITest {
 
         runner = terraformBuilder
             .env(Map.of("{{ inputs.environmentKey }}", "{{ inputs.environmentValue }}"))
-            .beforeCommands(List.of("sqlmesh init duckdb"))
-            .commands(List.of(
+            .beforeCommands(Property.of(List.of("sqlmesh init duckdb")))
+            .commands(Property.of((List.of(
                 "echo \"::{\\\"outputs\\\":{" +
                     "\\\"customEnv\\\":\\\"$" + environmentKey + "\\\"" +
                     "}}::\"",
                 "sqlmesh info | tr -d ' \n' | xargs -0 -I {} echo '::{\"outputs\":{}}::'"
-                             ))
+                             ))))
             .build();
 
         scriptOutput = runner.run(runContext);
