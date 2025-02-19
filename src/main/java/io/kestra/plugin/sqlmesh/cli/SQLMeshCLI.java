@@ -61,16 +61,13 @@ public class SQLMeshCLI extends Task implements RunnableTask<ScriptOutput>, Name
     @Schema(
         title = "The commands to execute before the main list of commands, e.g. to initialize or prepare the environment"
     )
-    @PluginProperty(dynamic = true)
-    protected List<String> beforeCommands;
+    protected Property<List<String>> beforeCommands;
 
     @Schema(
         title = "The commands to run in the container."
     )
-    @PluginProperty(dynamic = true)
     @NotNull
-    @NotEmpty
-    protected List<String> commands;
+    protected Property<List<String>> commands;
 
     @Schema(
         title = "Additional environment variables for the current process."
@@ -120,13 +117,9 @@ public class SQLMeshCLI extends Task implements RunnableTask<ScriptOutput>, Name
             .withNamespaceFiles(namespaceFiles)
             .withInputFiles(inputFiles)
             .withOutputFiles(renderedOutputFiles.isEmpty() ? null : renderedOutputFiles)
-            .withCommands(
-                ScriptService.scriptCommands(
-                    List.of("/bin/sh", "-c"),
-                    Optional.ofNullable(this.beforeCommands).map(throwFunction(runContext::render)).orElse(null),
-                    runContext.render(this.commands)
-                )
-            )
+            .withInterpreter(Property.of(List.of("/bin/sh", "-c")))
+            .withBeforeCommands(this.beforeCommands)
+            .withCommands(this.commands)
             .run();
     }
 
