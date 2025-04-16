@@ -32,7 +32,7 @@ import static io.kestra.core.utils.Rethrow.throwFunction;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Orchestrate a SQLMesh project from the Command Line Interface"
+    title = "Orchestrate a SQLMesh project from the CLI."
 )
 @Plugin(
     examples = {
