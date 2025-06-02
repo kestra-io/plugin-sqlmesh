@@ -38,7 +38,7 @@ class SQLMeshCLITest {
             .id(IdUtils.create())
             .type(SQLMeshCLI.class.getName())
             .docker(DockerOptions.builder().image("ghcr.io/kestra-io/sqlmesh").entryPoint(Collections.emptyList()).build())
-            .commands(Property.of(List.of("sqlmesh --version")));
+            .commands(Property.ofValue(List.of("sqlmesh --version")));
 
         SQLMeshCLI runner = terraformBuilder.build();
 
@@ -49,8 +49,8 @@ class SQLMeshCLITest {
 
         runner = terraformBuilder
             .env(Map.of("{{ inputs.environmentKey }}", "{{ inputs.environmentValue }}"))
-            .beforeCommands(Property.of(List.of("sqlmesh init duckdb")))
-            .commands(Property.of(List.of(
+            .beforeCommands(Property.ofValue(List.of("sqlmesh init duckdb")))
+            .commands(Property.ofValue(List.of(
                 "echo \"::{\\\"outputs\\\":{" +
                     "\\\"customEnv\\\":\\\"$" + environmentKey + "\\\"" +
                     "}}::\"",
