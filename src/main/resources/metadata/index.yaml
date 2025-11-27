@@ -1,0 +1,8 @@
+group: io.kestra.plugin.sqlmesh
+name: "sqlmesh"
+title: "SQLMesh"
+description: "SQLMesh plugin for Kestra"
+body: ""
+videos: []
+createdBy: "Kestra Core Team"
+managedBy: "Kestra Core Team"

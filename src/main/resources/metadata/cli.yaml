@@ -1,0 +1,8 @@
+group: io.kestra.plugin.sqlmesh.cli
+name: "cli"
+title: "SQLMesh CLI"
+description: "This sub-group of plugins contains tasks for using SQLMesh."
+body: ""
+videos: []
+createdBy: "Kestra Core Team"
+managedBy: "Kestra Core Team"
