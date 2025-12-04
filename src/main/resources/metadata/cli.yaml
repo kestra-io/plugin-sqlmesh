@@ -1,8 +1,8 @@
 group: io.kestra.plugin.sqlmesh.cli
 name: "cli"
 title: "SQLMesh CLI"
-description: "This sub-group of plugins contains tasks for using SQLMesh."
-body: ""
+description: "Tasks that execute SQLMesh CLI commands."
+body: "Set working directory and SQLMesh configuration, then run CLI commands (plan, run, apply, etc.) with arguments, capturing stdout/stderr and artifacts for orchestration."
 videos: []
 createdBy: "Kestra Core Team"
 managedBy: "Kestra Core Team"
