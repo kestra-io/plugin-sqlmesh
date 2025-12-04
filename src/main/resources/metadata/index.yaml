@@ -1,8 +1,8 @@
 group: io.kestra.plugin.sqlmesh
 name: "sqlmesh"
 title: "SQLMesh"
-description: "SQLMesh plugin for Kestra"
-body: ""
+description: "Tasks that run SQLMesh commands."
+body: "Provide SQLMesh project paths/configs and CLI options to plan, run, or apply SQLMesh workflows from Kestra, capturing outputs for deployment pipelines."
 videos: []
 createdBy: "Kestra Core Team"
 managedBy: "Kestra Core Team"
