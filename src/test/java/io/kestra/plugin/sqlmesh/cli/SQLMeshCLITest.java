@@ -42,7 +42,12 @@ class SQLMeshCLITest {
 
         SQLMeshCLI runner = terraformBuilder.build();
 
-        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, runner, Map.of("environmentKey", environmentKey, "environmentValue", environmentValue));
+        RunContext runContext = runContextFactory.of(
+            Map.of(
+                "environmentKey", environmentKey,
+                "environmentValue", environmentValue
+            )
+        );
 
         ScriptOutput scriptOutput = runner.run(runContext);
         assertThat(scriptOutput.getExitCode(), is(0));
