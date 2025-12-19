@@ -104,7 +104,7 @@ public class SQLMeshCLI extends AbstractExecScript implements RunnableTask<Scrip
     @Override
     public ScriptOutput run(RunContext runContext) throws Exception {
         var renderedOutputFiles = runContext.render(this.outputFiles).asList(String.class);
-        return new CommandsWrapper(runContext)
+        return this.commands(runContext)
             .withWarningOnStdErr(false)
             .withDockerOptions(injectDefaults(getDocker()))
             .withTaskRunner(this.taskRunner)
