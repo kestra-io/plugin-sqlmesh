@@ -6,7 +6,6 @@ import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.*;
 import io.kestra.core.models.tasks.runners.ScriptService;
 import io.kestra.core.models.tasks.runners.TaskRunner;
-import io.kestra.plugin.scripts.exec.AbstractExecScript;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 import io.kestra.plugin.scripts.exec.scripts.runners.CommandsWrapper;
@@ -56,7 +55,7 @@ import static io.kestra.core.utils.Rethrow.throwFunction;
         )
     }
 )
-public class SQLMeshCLI extends AbstractExecScript implements RunnableTask<ScriptOutput> {
+public class SQLMeshCLI extends Task implements RunnableTask<ScriptOutput>, NamespaceFilesInterface, InputFilesInterface, OutputFilesInterface {
     private static final String DEFAULT_IMAGE = "ghcr.io/kestra-io/sqlmesh";
 
     @Schema(
@@ -73,7 +72,11 @@ public class SQLMeshCLI extends AbstractExecScript implements RunnableTask<Scrip
     @Schema(
         title = "Additional environment variables for the current process."
     )
-    protected Property<Map<String, String>> env;
+    @PluginProperty(
+        additionalProperties = String.class,
+        dynamic = true
+    )
+    protected Map<String, String> env;
 
     @Schema(
         title = "Deprecated, use 'taskRunner' instead"
@@ -92,8 +95,9 @@ public class SQLMeshCLI extends AbstractExecScript implements RunnableTask<Scrip
     private TaskRunner<?> taskRunner = Docker.instance();
 
     @Schema(title = "The task runner container image, only used if the task runner is container-based.")
+    @PluginProperty(dynamic = true)
     @Builder.Default
-    private Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
+    private String containerImage = DEFAULT_IMAGE;
 
     private NamespaceFiles namespaceFiles;
 
@@ -103,16 +107,23 @@ public class SQLMeshCLI extends AbstractExecScript implements RunnableTask<Scrip
 
     @Override
     public ScriptOutput run(RunContext runContext) throws Exception {
-        return this.commands(runContext)
+        var renderedOutputFiles = runContext.render(this.outputFiles).asList(String.class);
+        return new CommandsWrapper(runContext)
             .withWarningOnStdErr(false)
+            .withDockerOptions(injectDefaults(getDocker()))
+            .withTaskRunner(this.taskRunner)
+            .withContainerImage(this.containerImage)
+            .withEnv(Optional.ofNullable(env).orElse(new HashMap<>()))
+            .withNamespaceFiles(namespaceFiles)
+            .withInputFiles(inputFiles)
+            .withOutputFiles(renderedOutputFiles)
             .withInterpreter(Property.ofValue(List.of("/bin/sh", "-c")))
             .withBeforeCommands(this.beforeCommands)
             .withCommands(this.commands)
             .run();
     }
 
-    @Override
-    protected DockerOptions injectDefaults(DockerOptions original) {
+    private DockerOptions injectDefaults(DockerOptions original) {
         if (original == null) {
             return null;
         }
