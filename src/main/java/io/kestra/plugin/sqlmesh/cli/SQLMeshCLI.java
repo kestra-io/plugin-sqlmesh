@@ -6,6 +6,7 @@ import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.*;
 import io.kestra.core.models.tasks.runners.ScriptService;
 import io.kestra.core.models.tasks.runners.TaskRunner;
+import io.kestra.plugin.scripts.exec.AbstractExecScript;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 import io.kestra.plugin.scripts.exec.scripts.runners.CommandsWrapper;
@@ -55,7 +56,7 @@ import static io.kestra.core.utils.Rethrow.throwFunction;
         )
     }
 )
-public class SQLMeshCLI extends Task implements RunnableTask<ScriptOutput>, NamespaceFilesInterface, InputFilesInterface, OutputFilesInterface {
+public class SQLMeshCLI extends AbstractExecScript implements RunnableTask<ScriptOutput>, NamespaceFilesInterface, InputFilesInterface, OutputFilesInterface {
     private static final String DEFAULT_IMAGE = "ghcr.io/kestra-io/sqlmesh";
 
     @Schema(
@@ -123,7 +124,8 @@ public class SQLMeshCLI extends Task implements RunnableTask<ScriptOutput>, Name
             .run();
     }
 
-    private DockerOptions injectDefaults(DockerOptions original) {
+    @Override
+    protected DockerOptions injectDefaults(DockerOptions original) {
         if (original == null) {
             return null;
         }
