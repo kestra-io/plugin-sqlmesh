@@ -48,7 +48,7 @@ class SQLMeshCLITest {
         assertThat(scriptOutput.getExitCode(), is(0));
 
         runner = terraformBuilder
-            .env((Map.of(environmentKey, environmentValue)))
+            .env(Map.of("{{ inputs.environmentKey }}", "{{ inputs.environmentValue }}"))
             .beforeCommands(Property.ofValue(List.of("sqlmesh init duckdb")))
             .commands(Property.ofValue(List.of(
                 "echo \"::{\\\"outputs\\\":{" +
