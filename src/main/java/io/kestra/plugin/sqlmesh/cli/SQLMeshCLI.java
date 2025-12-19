@@ -73,11 +73,7 @@ public class SQLMeshCLI extends AbstractExecScript implements RunnableTask<Scrip
     @Schema(
         title = "Additional environment variables for the current process."
     )
-    @PluginProperty(
-        additionalProperties = String.class,
-        dynamic = true
-    )
-    protected Map<String, String> env;
+    protected Property<Map<String, String>> env;
 
     @Schema(
         title = "Deprecated, use 'taskRunner' instead"
@@ -96,9 +92,8 @@ public class SQLMeshCLI extends AbstractExecScript implements RunnableTask<Scrip
     private TaskRunner<?> taskRunner = Docker.instance();
 
     @Schema(title = "The task runner container image, only used if the task runner is container-based.")
-    @PluginProperty(dynamic = true)
     @Builder.Default
-    private String containerImage = DEFAULT_IMAGE;
+    private Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     private NamespaceFiles namespaceFiles;
 
@@ -113,8 +108,8 @@ public class SQLMeshCLI extends AbstractExecScript implements RunnableTask<Scrip
             .withWarningOnStdErr(false)
             .withDockerOptions(injectDefaults(getDocker()))
             .withTaskRunner(this.taskRunner)
-            .withContainerImage(this.containerImage)
-            .withEnv(Optional.ofNullable(env).orElse(new HashMap<>()))
+            .withContainerImage(runContext.render(containerImage).as(String.class).orElse(DEFAULT_IMAGE))
+            .withEnv(runContext.render(env).asMap(String.class, String.class))
             .withNamespaceFiles(namespaceFiles)
             .withInputFiles(inputFiles)
             .withOutputFiles(renderedOutputFiles)
