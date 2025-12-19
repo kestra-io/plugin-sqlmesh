@@ -116,7 +116,7 @@ public class SQLMeshCLI extends Task implements RunnableTask<ScriptOutput>, Name
             .withEnv(Optional.ofNullable(env).orElse(new HashMap<>()))
             .withNamespaceFiles(namespaceFiles)
             .withInputFiles(inputFiles)
-            .withOutputFiles(renderedOutputFiles)
+            .withOutputFiles(renderedOutputFiles.isEmpty() ? null : renderedOutputFiles)
             .withInterpreter(Property.ofValue(List.of("/bin/sh", "-c")))
             .withBeforeCommands(this.beforeCommands)
             .withCommands(this.commands)
