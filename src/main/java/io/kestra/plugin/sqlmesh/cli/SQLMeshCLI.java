@@ -56,7 +56,7 @@ import static io.kestra.core.utils.Rethrow.throwFunction;
         )
     }
 )
-public class SQLMeshCLI extends AbstractExecScript implements RunnableTask<ScriptOutput>, NamespaceFilesInterface, InputFilesInterface, OutputFilesInterface {
+public class SQLMeshCLI extends AbstractExecScript implements RunnableTask<ScriptOutput> {
     private static final String DEFAULT_IMAGE = "ghcr.io/kestra-io/sqlmesh";
 
     @Schema(
@@ -103,16 +103,8 @@ public class SQLMeshCLI extends AbstractExecScript implements RunnableTask<Scrip
 
     @Override
     public ScriptOutput run(RunContext runContext) throws Exception {
-        var renderedOutputFiles = runContext.render(this.outputFiles).asList(String.class);
         return this.commands(runContext)
             .withWarningOnStdErr(false)
-            .withDockerOptions(injectDefaults(getDocker()))
-            .withTaskRunner(this.taskRunner)
-            .withContainerImage(runContext.render(containerImage).as(String.class).orElse(DEFAULT_IMAGE))
-            .withEnv(runContext.render(env).asMap(String.class, String.class))
-            .withNamespaceFiles(namespaceFiles)
-            .withInputFiles(inputFiles)
-            .withOutputFiles(renderedOutputFiles)
             .withInterpreter(Property.ofValue(List.of("/bin/sh", "-c")))
             .withBeforeCommands(this.beforeCommands)
             .withCommands(this.commands)
