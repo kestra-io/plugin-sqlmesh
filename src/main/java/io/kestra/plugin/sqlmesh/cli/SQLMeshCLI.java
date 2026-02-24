@@ -32,7 +32,8 @@ import static io.kestra.core.utils.Rethrow.throwFunction;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Orchestrate a SQLMesh project from the CLI."
+    title = "Run SQLMesh CLI workflows",
+    description = "Executes SQLMesh commands through `/bin/sh -c` within the configured task runner. Defaults to the Docker runner using image `ghcr.io/kestra-io/sqlmesh`; add `beforeCommands` for setup and prefer `taskRunner` over the deprecated docker property."
 )
 @Plugin(
     examples = {
@@ -52,6 +53,34 @@ import static io.kestra.core.utils.Rethrow.throwFunction;
                     commands:
                       - sqlmesh plan --auto-apply"""
             }
+        ),
+        @Example(
+            title = "Plan, apply, and export artifacts with custom runner settings",
+            full = true,
+            code = {
+                """
+                id: sqlmesh_advanced
+                namespace: company.team
+
+                tasks:
+                  - id: transform
+                    type: io.kestra.plugin.sqlmesh.cli.SQLMeshCLI
+                    beforeCommands:
+                      - python -m pip install -r requirements.txt
+                    commands:
+                      - sqlmesh plan --restate-models staging* --auto-apply
+                      - sqlmesh run prod --start 2024-12-01 --end 2024-12-07
+                      - sqlmesh fetchdf prod my_model --output /data/exports/model.parquet
+                    env:
+                      SQLMESH_DB_USER: "{{ secret('db_user') }}"
+                      SQLMESH_DB_PASS: "{{ secret('db_pass') }}"
+                    containerImage: ghcr.io/kestra-io/sqlmesh:latest
+                    taskRunner:
+                      type: io.kestra.plugin.scripts.runner.docker.Docker
+                    outputFiles:
+                      - /data/exports/*.parquet
+                """
+            }
         )
     }
 )
@@ -59,18 +88,21 @@ public class SQLMeshCLI extends Task implements RunnableTask<ScriptOutput>, Name
     private static final String DEFAULT_IMAGE = "ghcr.io/kestra-io/sqlmesh";
 
     @Schema(
-        title = "The commands to execute before the main list of commands, e.g. to initialize or prepare the environment"
+        title = "Setup commands before main run",
+        description = "Optional steps executed with `/bin/sh -c` before commands, useful for initialization or installing prerequisites."
     )
     protected Property<List<String>> beforeCommands;
 
     @Schema(
-        title = "The commands to run in the container."
+        title = "Primary SQLMesh CLI commands",
+        description = "Required command list executed in order with `/bin/sh -c` inside the task runner."
     )
     @NotNull
     protected Property<List<String>> commands;
 
     @Schema(
-        title = "Additional environment variables for the current process."
+        title = "Extra environment variables",
+        description = "Key-value map merged into the task environment; values support templating."
     )
     @PluginProperty(
         additionalProperties = String.class,
@@ -79,22 +111,26 @@ public class SQLMeshCLI extends Task implements RunnableTask<ScriptOutput>, Name
     protected Map<String, String> env;
 
     @Schema(
-        title = "Deprecated, use 'taskRunner' instead"
+        title = "Deprecated Docker options",
+        description = "Use taskRunner instead; kept for backward compatibility."
     )
     @PluginProperty
     @Deprecated
     private DockerOptions docker;
 
     @Schema(
-        title = "The task runner to use.",
-        description = "Task runners are provided by plugins, each have their own properties."
+        title = "Task runner implementation",
+        description = "Defaults to the Docker runner; configure plugin-specific properties to switch execution backends."
     )
     @PluginProperty
     @Builder.Default
     @Valid
     private TaskRunner<?> taskRunner = Docker.instance();
 
-    @Schema(title = "The task runner container image, only used if the task runner is container-based.")
+    @Schema(
+        title = "Container image for runner",
+        description = "Used only when taskRunner runs in containers; defaults to `ghcr.io/kestra-io/sqlmesh`."
+    )
     @PluginProperty(dynamic = true)
     @Builder.Default
     private String containerImage = DEFAULT_IMAGE;
