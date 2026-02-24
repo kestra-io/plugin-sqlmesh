@@ -35,12 +35,12 @@ import static io.kestra.core.utils.Rethrow.throwFunction;
     title = "Run SQLMesh CLI workflows",
     description = "Executes SQLMesh commands through `/bin/sh -c` within the configured task runner. Defaults to the Docker runner using image `ghcr.io/kestra-io/sqlmesh`; add `beforeCommands` for setup and prefer `taskRunner` over the deprecated docker property."
 )
-    @Plugin(
-        examples = {
-            @Example(
-                title = "Orchestrate a SQLMesh project by automatically applying the plan",
-                full = true,
-                code = {
+@Plugin(
+    examples = {
+        @Example(
+            title = "Orchestrate a SQLMesh project by automatically applying the plan",
+            full = true,
+            code = {
                 """
                 id: sqlmesh_transform
                 namespace: company.team
