@@ -1,30 +1,27 @@
 package io.kestra.plugin.sqlmesh.cli;
 
-import io.kestra.core.models.annotations.Example;
-import io.kestra.core.models.annotations.Plugin;
-import io.kestra.core.models.property.Property;
-import io.kestra.core.models.tasks.*;
-import io.kestra.core.models.tasks.runners.ScriptService;
-import io.kestra.core.models.tasks.runners.TaskRunner;
-import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
-import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
-import io.kestra.plugin.scripts.exec.scripts.runners.CommandsWrapper;
-import io.kestra.plugin.scripts.runner.docker.Docker;
-import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.Valid;
-import lombok.*;
-import lombok.experimental.SuperBuilder;
-import io.kestra.core.models.annotations.PluginProperty;
-import io.kestra.core.runners.RunContext;
-
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static io.kestra.core.utils.Rethrow.throwFunction;
+import io.kestra.core.models.annotations.Example;
+import io.kestra.core.models.annotations.Plugin;
+import io.kestra.core.models.annotations.PluginProperty;
+import io.kestra.core.models.property.Property;
+import io.kestra.core.models.tasks.*;
+import io.kestra.core.models.tasks.runners.TaskRunner;
+import io.kestra.core.runners.RunContext;
+import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
+import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
+import io.kestra.plugin.scripts.exec.scripts.runners.CommandsWrapper;
+import io.kestra.plugin.scripts.runner.docker.Docker;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 @SuperBuilder
 @ToString
@@ -42,16 +39,16 @@ import static io.kestra.core.utils.Rethrow.throwFunction;
             full = true,
             code = {
                 """
-                id: sqlmesh_transform
-                namespace: company.team
+                    id: sqlmesh_transform
+                    namespace: company.team
 
-                tasks:
-                  - id: transform
-                    type: io.kestra.plugin.sqlmesh.cli.SQLMeshCLI
-                    beforeCommands:
-                      - sqlmesh init duckdb
-                    commands:
-                      - sqlmesh plan --auto-apply"""
+                    tasks:
+                      - id: transform
+                        type: io.kestra.plugin.sqlmesh.cli.SQLMeshCLI
+                        beforeCommands:
+                          - sqlmesh init duckdb
+                        commands:
+                          - sqlmesh plan --auto-apply"""
             }
         ),
         @Example(
@@ -59,27 +56,27 @@ import static io.kestra.core.utils.Rethrow.throwFunction;
             full = true,
             code = {
                 """
-                id: sqlmesh_advanced
-                namespace: company.team
+                    id: sqlmesh_advanced
+                    namespace: company.team
 
-                tasks:
-                  - id: transform
-                    type: io.kestra.plugin.sqlmesh.cli.SQLMeshCLI
-                    beforeCommands:
-                      - python -m pip install -r requirements.txt
-                    commands:
-                      - sqlmesh plan --restate-models staging* --auto-apply
-                      - sqlmesh run prod --start 2024-12-01 --end 2024-12-07
-                      - sqlmesh fetchdf prod my_model --output /data/exports/model.parquet
-                    env:
-                      SQLMESH_DB_USER: "{{ secret('db_user') }}"
-                      SQLMESH_DB_PASS: "{{ secret('db_pass') }}"
-                    containerImage: ghcr.io/kestra-io/sqlmesh:latest
-                    taskRunner:
-                      type: io.kestra.plugin.scripts.runner.docker.Docker
-                    outputFiles:
-                      - /data/exports/*.parquet
-                """
+                    tasks:
+                      - id: transform
+                        type: io.kestra.plugin.sqlmesh.cli.SQLMeshCLI
+                        beforeCommands:
+                          - python -m pip install -r requirements.txt
+                        commands:
+                          - sqlmesh plan --restate-models staging* --auto-apply
+                          - sqlmesh run prod --start 2024-12-01 --end 2024-12-07
+                          - sqlmesh fetchdf prod my_model --output /data/exports/model.parquet
+                        env:
+                          SQLMESH_DB_USER: "{{ secret('db_user') }}"
+                          SQLMESH_DB_PASS: "{{ secret('db_pass') }}"
+                        containerImage: ghcr.io/kestra-io/sqlmesh:latest
+                        taskRunner:
+                          type: io.kestra.plugin.scripts.runner.docker.Docker
+                        outputFiles:
+                          - /data/exports/*.parquet
+                    """
             }
         )
     }

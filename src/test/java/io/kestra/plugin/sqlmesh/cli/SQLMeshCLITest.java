@@ -1,23 +1,21 @@
 package io.kestra.plugin.sqlmesh.cli;
 
-import com.google.common.collect.ImmutableMap;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+import org.junit.jupiter.api.Test;
+
+import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.models.property.Property;
+import io.kestra.core.runners.RunContext;
+import io.kestra.core.runners.RunContextFactory;
 import io.kestra.core.utils.IdUtils;
 import io.kestra.core.utils.TestsUtils;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
-import io.kestra.plugin.sqlmesh.cli.SQLMeshCLI;
-import io.kestra.core.junit.annotations.KestraTest;
-import org.apache.commons.lang3.StringUtils;
-import org.junit.jupiter.api.Test;
-import io.kestra.core.runners.RunContext;
-import io.kestra.core.runners.RunContextFactory;
 
 import jakarta.inject.Inject;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -50,12 +48,16 @@ class SQLMeshCLITest {
         runner = terraformBuilder
             .env(Map.of("{{ inputs.environmentKey }}", "{{ inputs.environmentValue }}"))
             .beforeCommands(Property.ofValue(List.of("sqlmesh init duckdb")))
-            .commands(Property.ofValue(List.of(
-                "echo \"::{\\\"outputs\\\":{" +
-                    "\\\"customEnv\\\":\\\"$" + environmentKey + "\\\"" +
-                    "}}::\"",
-                "sqlmesh info | tr -d ' \n' | xargs -0 -I {} echo '::{\"outputs\":{}}::'"
-                             )))
+            .commands(
+                Property.ofValue(
+                    List.of(
+                        "echo \"::{\\\"outputs\\\":{" +
+                            "\\\"customEnv\\\":\\\"$" + environmentKey + "\\\"" +
+                            "}}::\"",
+                        "sqlmesh info | tr -d ' \n' | xargs -0 -I {} echo '::{\"outputs\":{}}::'"
+                    )
+                )
+            )
             .build();
 
         scriptOutput = runner.run(runContext);
