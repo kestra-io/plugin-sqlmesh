@@ -1,0 +1,23 @@
+id: all_sqlmesh
+namespace: sanitychecks.plugin-sqlmesh
+
+tasks:
+  - id: sqlmesh
+    type: io.kestra.plugin.sqlmesh.cli.SQLMeshCLI
+    beforeCommands:
+      - sqlmesh init duckdb
+    outputFiles:
+      - info.txt
+    commands:
+      - sqlmesh info > info.txt
+
+  - id: assert
+    type: io.kestra.plugin.core.execution.Assert
+    conditions:
+      - "{{ outputs.sqlmesh.exitCode == 0 }}"
+      - "{{ outputs.sqlmesh.outputFiles['info.txt'] is not null }}"
+      - "{{ read(outputs.sqlmesh.outputFiles['info.txt']) | length > 0 }}"
+
+finally:
+  - id: purge
+    type: io.kestra.plugin.core.storage.PurgeCurrentExecutionFiles
