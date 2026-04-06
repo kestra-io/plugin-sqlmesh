@@ -88,6 +88,7 @@ public class SQLMeshCLI extends Task implements RunnableTask<ScriptOutput>, Name
         title = "Setup commands before main run",
         description = "Optional steps executed with `/bin/sh -c` before commands, useful for initialization or installing prerequisites."
     )
+    @PluginProperty(group = "execution")
     protected Property<List<String>> beforeCommands;
 
     @Schema(
@@ -95,13 +96,14 @@ public class SQLMeshCLI extends Task implements RunnableTask<ScriptOutput>, Name
         description = "Required command list executed in order with `/bin/sh -c` inside the task runner."
     )
     @NotNull
+    @PluginProperty(group = "main")
     protected Property<List<String>> commands;
 
     @Schema(
         title = "Extra environment variables",
         description = "Key-value map merged into the task environment; values support templating."
     )
-    @PluginProperty(
+    @PluginProperty(group = "execution", 
         additionalProperties = String.class,
         dynamic = true
     )
@@ -111,7 +113,7 @@ public class SQLMeshCLI extends Task implements RunnableTask<ScriptOutput>, Name
         title = "Deprecated Docker options",
         description = "Use taskRunner instead; kept for backward compatibility."
     )
-    @PluginProperty
+    @PluginProperty(group = "deprecated")
     @Deprecated
     private DockerOptions docker;
 
@@ -119,7 +121,7 @@ public class SQLMeshCLI extends Task implements RunnableTask<ScriptOutput>, Name
         title = "Task runner implementation",
         description = "Defaults to the Docker runner; configure plugin-specific properties to switch execution backends."
     )
-    @PluginProperty
+    @PluginProperty(group = "execution")
     @Builder.Default
     @Valid
     private TaskRunner<?> taskRunner = Docker.instance();
@@ -128,14 +130,17 @@ public class SQLMeshCLI extends Task implements RunnableTask<ScriptOutput>, Name
         title = "Container image for runner",
         description = "Used only when taskRunner runs in containers; defaults to `ghcr.io/kestra-io/sqlmesh`."
     )
-    @PluginProperty(dynamic = true)
+    @PluginProperty(dynamic = true, group = "execution")
     @Builder.Default
     private String containerImage = DEFAULT_IMAGE;
 
+    @PluginProperty(group = "source")
     private NamespaceFiles namespaceFiles;
 
+    @PluginProperty(group = "source")
     private Object inputFiles;
 
+    @PluginProperty(group = "destination")
     private Property<List<String>> outputFiles;
 
     @Override
