@@ -103,10 +103,11 @@ public class SQLMeshCLI extends Task implements RunnableTask<ScriptOutput>, Name
         title = "Extra environment variables",
         description = "Key-value map merged into the task environment; values support templating."
     )
-    @PluginProperty(group = "execution", 
+    @PluginProperty(group = "execution",
         additionalProperties = String.class,
         dynamic = true
     )
+    @ToString.Exclude
     protected Map<String, String> env;
 
     @Schema(
