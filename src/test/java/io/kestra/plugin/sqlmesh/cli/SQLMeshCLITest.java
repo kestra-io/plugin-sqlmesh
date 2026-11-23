@@ -19,6 +19,7 @@ import jakarta.inject.Inject;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @KestraTest
 class SQLMeshCLITest {
@@ -46,7 +47,7 @@ class SQLMeshCLITest {
         assertThat(scriptOutput.getExitCode(), is(0));
 
         runner = terraformBuilder
-            .env(Map.of("{{ inputs.environmentKey }}", "{{ inputs.environmentValue }}"))
+            .env(Property.ofValue(Map.of("{{ inputs.environmentKey }}", "{{ inputs.environmentValue }}")))
             .beforeCommands(Property.ofValue(List.of("sqlmesh init duckdb")))
             .commands(
                 Property.ofValue(
@@ -63,5 +64,34 @@ class SQLMeshCLITest {
         scriptOutput = runner.run(runContext);
         assertThat(scriptOutput.getExitCode(), is(0));
         assertThat(scriptOutput.getVars().get("customEnv"), is(environmentValue));
+    }
+
+    @Test
+    void failFastStopsOnAFailingBeforeCommand() throws Exception {
+        var task = SQLMeshCLI.builder()
+            .id(IdUtils.create())
+            .type(SQLMeshCLI.class.getName())
+            .failFast(Property.ofValue(true))
+            .beforeCommands(Property.ofValue(List.of("false")))
+            .commands(Property.ofValue(List.of("sqlmesh --version")))
+            .build();
+
+        var runContext = TestsUtils.mockRunContext(runContextFactory, task, Map.of());
+
+        assertThrows(Exception.class, () -> task.run(runContext));
+    }
+
+    @Test
+    void failingBeforeCommandDoesNotStopTheRunByDefault() throws Exception {
+        var task = SQLMeshCLI.builder()
+            .id(IdUtils.create())
+            .type(SQLMeshCLI.class.getName())
+            .beforeCommands(Property.ofValue(List.of("false", "cd {{ workingDir }}")))
+            .commands(Property.ofValue(List.of("sqlmesh --version")))
+            .build();
+
+        var runContext = TestsUtils.mockRunContext(runContextFactory, task, Map.of());
+
+        assertThat(task.run(runContext).getExitCode(), is(0));
     }
 }
