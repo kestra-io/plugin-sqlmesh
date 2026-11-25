@@ -87,7 +87,7 @@ public class SQLMeshCLI extends AbstractExecScript implements RunnableTask<Scrip
 
     @Schema(
         title = "Primary SQLMesh CLI commands",
-        description = "Required command list executed in order with `/bin/sh -c` inside the task runner."
+        description = "Required command list executed in order through the `interpreter` (`/bin/sh -c` by default) inside the task runner."
     )
     @NotNull
     @PluginProperty(group = "main")
