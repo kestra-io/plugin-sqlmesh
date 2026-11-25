@@ -1,20 +1,17 @@
 package io.kestra.plugin.sqlmesh.cli;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.property.Property;
-import io.kestra.core.models.tasks.*;
+import io.kestra.core.models.tasks.RunnableTask;
 import io.kestra.core.models.tasks.runners.TaskRunner;
 import io.kestra.core.runners.RunContext;
+import io.kestra.plugin.scripts.exec.AbstractExecScript;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
-import io.kestra.plugin.scripts.exec.scripts.runners.CommandsWrapper;
 import io.kestra.plugin.scripts.runner.docker.Docker;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -24,13 +21,17 @@ import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 @SuperBuilder
-@ToString
+// callSuper = false: the inherited env has no @ToString.Exclude, keeps rendered secrets out
+@ToString(callSuper = false)
 @EqualsAndHashCode
 @Getter
 @NoArgsConstructor
 @Schema(
     title = "Run SQLMesh CLI workflows",
-    description = "Executes SQLMesh commands through `/bin/sh -c` within the configured task runner. Defaults to the Docker runner using image `ghcr.io/kestra-io/sqlmesh`; add `beforeCommands` for setup and prefer `taskRunner` over the deprecated docker property."
+    description = """
+        Executes SQLMesh commands through the `interpreter` (`/bin/sh -c` by default) within the configured task runner. Defaults to the Docker runner using image `ghcr.io/kestra-io/sqlmesh`. Add `beforeCommands` for setup and prefer `taskRunner` over the deprecated `docker` property.
+        The inherited `warningOnStdErr` and `runner` properties are ignored. The deprecated `docker` option only applies on Kestra 1.3, use `taskRunner`.
+        """
 )
 @Plugin(
     examples = {
@@ -81,35 +82,18 @@ import lombok.experimental.SuperBuilder;
         )
     }
 )
-public class SQLMeshCLI extends Task implements RunnableTask<ScriptOutput>, NamespaceFilesInterface, InputFilesInterface, OutputFilesInterface {
+public class SQLMeshCLI extends AbstractExecScript implements RunnableTask<ScriptOutput> {
     private static final String DEFAULT_IMAGE = "ghcr.io/kestra-io/sqlmesh";
 
     @Schema(
-        title = "Setup commands before main run",
-        description = "Optional steps executed with `/bin/sh -c` before commands, useful for initialization or installing prerequisites."
-    )
-    @PluginProperty(group = "execution")
-    protected Property<List<String>> beforeCommands;
-
-    @Schema(
         title = "Primary SQLMesh CLI commands",
-        description = "Required command list executed in order with `/bin/sh -c` inside the task runner."
+        description = "Required command list executed in order through the `interpreter` (`/bin/sh -c` by default) inside the task runner."
     )
     @NotNull
     @PluginProperty(group = "main")
     protected Property<List<String>> commands;
 
-    @Schema(
-        title = "Extra environment variables",
-        description = "Key-value map merged into the task environment; values support templating."
-    )
-    @PluginProperty(group = "execution",
-        additionalProperties = String.class,
-        dynamic = true
-    )
-    @ToString.Exclude
-    protected Map<String, String> env;
-
+    // Kept here: core has no docker property from 2.0, flows using it would fail validation
     @Schema(
         title = "Deprecated Docker options",
         description = "Use taskRunner instead; kept for backward compatibility."
@@ -131,38 +115,33 @@ public class SQLMeshCLI extends Task implements RunnableTask<ScriptOutput>, Name
         title = "Container image for runner",
         description = "Used only when taskRunner runs in containers; defaults to `ghcr.io/kestra-io/sqlmesh`."
     )
-    @PluginProperty(dynamic = true, group = "execution")
+    @PluginProperty(group = "execution")
     @Builder.Default
-    private String containerImage = DEFAULT_IMAGE;
+    private Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
-    @PluginProperty(group = "source")
-    private NamespaceFiles namespaceFiles;
-
-    @PluginProperty(group = "source")
-    private Object inputFiles;
-
-    @PluginProperty(group = "destination")
-    private Property<List<String>> outputFiles;
+    @Schema(
+        title = "Fail fast on the first failing command",
+        description = """
+            If true, `set -e` is prepended to `beforeCommands`, so the first failing line stops the run.
+            Defaults to false, so a failing `beforeCommands` line does not stop the run.
+            """
+    )
+    @Builder.Default
+    @PluginProperty(group = "execution")
+    protected Property<Boolean> failFast = Property.ofValue(false);
 
     @Override
     public ScriptOutput run(RunContext runContext) throws Exception {
-        var renderedOutputFiles = runContext.render(this.outputFiles).asList(String.class);
-        return new CommandsWrapper(runContext)
-            .withWarningOnStdErr(false)
-            .withDockerOptions(injectDefaults(getDocker()))
-            .withTaskRunner(this.taskRunner)
-            .withContainerImage(this.containerImage)
-            .withEnv(Optional.ofNullable(env).orElse(new HashMap<>()))
-            .withNamespaceFiles(namespaceFiles)
-            .withInputFiles(inputFiles)
-            .withOutputFiles(renderedOutputFiles.isEmpty() ? null : renderedOutputFiles)
-            .withInterpreter(Property.ofValue(List.of("/bin/sh", "-c")))
-            .withBeforeCommands(this.beforeCommands)
+        return this.commands(runContext)
+            .withInterpreter(this.getInterpreter())
+            .withBeforeCommands(this.getBeforeCommands())
+            .withBeforeCommandsWithOptions(true)
             .withCommands(this.commands)
             .run();
     }
 
-    private DockerOptions injectDefaults(DockerOptions original) {
+    @Override
+    protected DockerOptions injectDefaults(RunContext runContext, DockerOptions original) {
         if (original == null) {
             return null;
         }

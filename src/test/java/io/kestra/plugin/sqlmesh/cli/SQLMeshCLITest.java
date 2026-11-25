@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 
 import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.models.property.Property;
+import io.kestra.core.models.tasks.RunnableTaskException;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.runners.RunContextFactory;
 import io.kestra.core.utils.IdUtils;
@@ -18,7 +19,10 @@ import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 import jakarta.inject.Inject;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @KestraTest
 class SQLMeshCLITest {
@@ -46,7 +50,7 @@ class SQLMeshCLITest {
         assertThat(scriptOutput.getExitCode(), is(0));
 
         runner = terraformBuilder
-            .env(Map.of("{{ inputs.environmentKey }}", "{{ inputs.environmentValue }}"))
+            .env(Property.ofValue(Map.of("{{ inputs.environmentKey }}", "{{ inputs.environmentValue }}")))
             .beforeCommands(Property.ofValue(List.of("sqlmesh init duckdb")))
             .commands(
                 Property.ofValue(
@@ -63,5 +67,49 @@ class SQLMeshCLITest {
         scriptOutput = runner.run(runContext);
         assertThat(scriptOutput.getExitCode(), is(0));
         assertThat(scriptOutput.getVars().get("customEnv"), is(environmentValue));
+    }
+
+    @Test
+    void failFastStopsOnAFailingBeforeCommand() throws Exception {
+        var task = SQLMeshCLI.builder()
+            .id(IdUtils.create())
+            .type(SQLMeshCLI.class.getName())
+            .failFast(Property.ofValue(true))
+            .beforeCommands(Property.ofValue(List.of("false")))
+            .commands(Property.ofValue(List.of("sqlmesh --version")))
+            .build();
+
+        var runContext = TestsUtils.mockRunContext(runContextFactory, task, Map.of());
+
+        var exception = assertThrows(RunnableTaskException.class, () -> task.run(runContext));
+        assertThat(exception.getMessage(), containsString("exit code 1"));
+    }
+
+    @Test
+    void failingBeforeCommandDoesNotStopTheRunByDefault() throws Exception {
+        var task = SQLMeshCLI.builder()
+            .id(IdUtils.create())
+            .type(SQLMeshCLI.class.getName())
+            .beforeCommands(Property.ofValue(List.of("false", "cd {{ workingDir }}")))
+            .commands(Property.ofValue(List.of("sqlmesh --version")))
+            .build();
+
+        var runContext = TestsUtils.mockRunContext(runContextFactory, task, Map.of());
+
+        assertThat(task.run(runContext).getExitCode(), is(0));
+    }
+
+    @Test
+    void toStringDoesNotExposeEnvSecrets() throws Exception {
+        var task = SQLMeshCLI.builder()
+            .id(IdUtils.create())
+            .type(SQLMeshCLI.class.getName())
+            .commands(Property.ofValue(List.of("echo")))
+            .env(Property.ofValue(Map.of("SECRET_KEY", "super-secret-value")))
+            .build();
+        // render caches the value on the property, as run() does
+        TestsUtils.mockRunContext(runContextFactory, task, Map.of()).render(task.getEnv()).asMap(String.class, String.class);
+
+        assertThat(task.toString(), not(containsString("super-secret-value")));
     }
 }
