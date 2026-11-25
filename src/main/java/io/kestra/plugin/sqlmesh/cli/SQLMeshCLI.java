@@ -2,7 +2,6 @@ package io.kestra.plugin.sqlmesh.cli;
 
 import java.util.List;
 
-import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.annotations.PluginProperty;
@@ -30,7 +29,8 @@ import lombok.experimental.SuperBuilder;
     title = "Run SQLMesh CLI workflows",
     description = """
         Executes SQLMesh commands through the `interpreter` (`/bin/sh -c` by default) within the configured task runner. Defaults to the Docker runner using image `ghcr.io/kestra-io/sqlmesh`. Add `beforeCommands` for setup and prefer `taskRunner` over the deprecated `docker` property.
-        The inherited `warningOnStdErr` and `runner` properties are accepted but ignored: stderr is logged as is and `taskRunner` is the only runner setting honored."""
+        The inherited `warningOnStdErr` and `runner` properties are ignored. The deprecated `docker` option only applies on Kestra 1.3, use `taskRunner`.
+        """
 )
 @Plugin(
     examples = {
@@ -92,7 +92,7 @@ public class SQLMeshCLI extends AbstractExecScript implements RunnableTask<Scrip
     @PluginProperty(group = "main")
     protected Property<List<String>> commands;
 
-    // Own copy: AbstractExecScript has no docker field from 2.0, NoSuchFieldError otherwise
+    // Kept here: core has no docker property from 2.0, flows using it would fail validation
     @Schema(
         title = "Deprecated Docker options",
         description = "Use taskRunner instead; kept for backward compatibility."
@@ -140,7 +140,7 @@ public class SQLMeshCLI extends AbstractExecScript implements RunnableTask<Scrip
     }
 
     @Override
-    protected DockerOptions injectDefaults(RunContext runContext, DockerOptions original) throws IllegalVariableEvaluationException {
+    protected DockerOptions injectDefaults(RunContext runContext, DockerOptions original) {
         if (original == null) {
             return null;
         }
