@@ -18,7 +18,9 @@ import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 import jakarta.inject.Inject;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @KestraTest
@@ -93,5 +95,19 @@ class SQLMeshCLITest {
         var runContext = TestsUtils.mockRunContext(runContextFactory, task, Map.of());
 
         assertThat(task.run(runContext).getExitCode(), is(0));
+    }
+
+    @Test
+    void toStringDoesNotExposeEnvSecrets() throws Exception {
+        var task = SQLMeshCLI.builder()
+            .id(IdUtils.create())
+            .type(SQLMeshCLI.class.getName())
+            .commands(Property.ofValue(List.of("echo")))
+            .env(Property.ofValue(Map.of("SECRET_KEY", "super-secret-value")))
+            .build();
+        // render caches the value on the property, as run() does
+        TestsUtils.mockRunContext(runContextFactory, task, Map.of()).render(task.getEnv()).asMap(String.class, String.class);
+
+        assertThat(task.toString(), not(containsString("super-secret-value")));
     }
 }

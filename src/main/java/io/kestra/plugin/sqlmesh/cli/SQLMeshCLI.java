@@ -21,7 +21,8 @@ import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 @SuperBuilder
-@ToString
+// callSuper = false: the inherited env has no @ToString.Exclude, keeps rendered secrets out
+@ToString(callSuper = false)
 @EqualsAndHashCode
 @Getter
 @NoArgsConstructor
